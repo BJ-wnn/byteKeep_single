@@ -1,6 +1,7 @@
 package org.wnn.bytekeep.core.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,4 +41,11 @@ public class GlobalExceptionHandler {
         log.error("参数校验异常: ", ex);
         return CommonResponse.fail(ResultCode.BAD_REQUEST);
     }
+
+    @ExceptionHandler(BindException.class)
+    public CommonResponse<String> handleBindException(BindException ex) {
+        log.error("参数校验异常: ", ex);
+        return CommonResponse.fail(ResultCode.BAD_REQUEST);
+    }
+
 }

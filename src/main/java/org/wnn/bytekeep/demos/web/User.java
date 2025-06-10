@@ -16,28 +16,34 @@
 
 package org.wnn.bytekeep.demos.web;
 
+import lombok.Data;
+import org.wnn.bytekeep.core.validation.CreateGroup;
+import org.wnn.bytekeep.core.validation.DeleteGroup;
+import org.wnn.bytekeep.core.validation.UpdateGroup;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 /**
  * @author <a href="mailto:chenxilzx1@gmail.com">theonefx</a>
  */
+@Data
 public class User {
 
+    @NotNull(message = "用户名不能为空",groups = {UpdateGroup.class, DeleteGroup.class})
+    private Integer id;
+
+    @NotBlank(message = "用户名不能为空",groups = {CreateGroup.class})
     private String name;
 
+    @NotNull(message = "年龄不能为空",groups = {CreateGroup.class})
+    @Min(value = 0, message = "年龄不能小于0",groups = {CreateGroup.class})
     private Integer age;
 
-    public String getName() {
-        return name;
-    }
+    @Valid
+    @NotNull(message = "手机信息不能为空",groups = {CreateGroup.class})
+    private Phone phone;
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
 }

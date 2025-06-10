@@ -3,6 +3,7 @@ package org.wnn.bytekeep.core.response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.MediaType;
@@ -42,6 +43,8 @@ public class GlobalResponseWrapperAdvice implements ResponseBodyAdvice<Object> {
                                   ServerHttpResponse response) {
         // 如果已经是封装后的格式，直接返回
         if (body instanceof CommonResponse || body instanceof ResponseEntity) {
+            CommonResponse<?> apiResponse = (CommonResponse<?>) body;
+            MDC.put("bizCode", String.valueOf(apiResponse.getCode()));
             return body;
         }
 
@@ -53,8 +56,7 @@ public class GlobalResponseWrapperAdvice implements ResponseBodyAdvice<Object> {
                 throw new RuntimeException("String 类型序列化失败", e);
             }
         }
-
-        System.out.println(CommonResponse.success(body).toString());
+        MDC.put("bizCode", String.valueOf(ResultCode.SUCCESS.getCode()));
         return CommonResponse.success(body);
     }
 }

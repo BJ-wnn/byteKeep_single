@@ -5,6 +5,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import org.wnn.bytekeep.core.response.CommonResponse;
 import org.wnn.bytekeep.core.response.ResultCode;
 
@@ -46,6 +47,19 @@ public class GlobalExceptionHandler {
     public CommonResponse<String> handleBindException(BindException ex) {
         log.error("参数校验异常: ", ex);
         return CommonResponse.fail(ResultCode.BAD_REQUEST);
+    }
+
+
+    @ExceptionHandler(IdempotentException.class)
+    public CommonResponse<String> handleIdempotentException(IdempotentException ex) {
+        log.warn("幂等性异常: {}", ex.getMessage());
+        return CommonResponse.fail(ResultCode.IDEMPOTENT_REJECTED);
+    }
+
+    @ExceptionHandler(MissingTokenException.class)
+    public CommonResponse<String> handleResponseStatusException(MissingTokenException ex) {
+        log.warn("缺少幂等性 Token: {}", ex.getMessage());
+        return CommonResponse.fail(ResultCode.MISSING_IDEMPOTENT_TOKEN);
     }
 
 }

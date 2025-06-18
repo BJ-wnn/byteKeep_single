@@ -1,0 +1,47 @@
+## author : wang nannan
+## 注意： 这里放到的都是自定义封装的配置
+
+# 接口日志是否记录返回结果
+logging:
+  request:
+    enableResponseBody: false # 是否记录返回体，生产禁止设置为true
+    maxResponseLength: 1000 # 最大返回体长度
+    excludePaths: # 过滤不需要记录请求日志的接口
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /swagger-resources/**
+      - /webjars/**
+      - /upload/**
+      - /download/**
+      - /v2/api-docs/**
+      - /**/*.html
+      - /**/*.css
+      - /**/*.js
+      - /**/*.png
+      - /**/*.jpg
+
+
+###################### caffeine 缓存配置 ######################
+
+# 使用前缀进行统一管理
+app:
+  cache:
+    configs:
+      short: #缓存前缀名称，例如 short:users 是缓存空间的名字
+        expire: 5m #缓存过期时间，单位支持s(秒)、m(分钟)、h(小时)
+        max-size: 500 #最大容量
+      mid:
+        expire: 30m
+        max-size: 1000
+      long:
+        expire: 6h
+        max-size: 2000
+      token:
+        expire: 10s
+        max-size: 100
+      default:
+        expire: 10m
+        max-size: 500
+
+
+

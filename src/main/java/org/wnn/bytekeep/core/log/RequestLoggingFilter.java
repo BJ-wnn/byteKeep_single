@@ -1,5 +1,6 @@
 package org.wnn.bytekeep.core.log;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
@@ -26,7 +28,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,9 +44,10 @@ import java.util.stream.Collectors;
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger("reqLog");
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
     private final ObjectMapper objectMapper;
     private final LoggingProperties props;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     public RequestLoggingFilter(LoggingProperties props) {
         this.props = props;
@@ -92,7 +98,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         }
 
         log.setTraceId(traceId);
-        log.setTimestamp(LocalDateTime.now().format(FORMATTER));
+        log.setTimestamp(FORMATTER.format(LocalDateTime.now().atZone(ZoneOffset.UTC)));
         log.setMethod(request.getMethod());
         log.setUri(request.getRequestURI());
         log.setQueryString(request.getQueryString());
@@ -155,13 +161,25 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     private boolean shouldSkipLogging(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contentType = request.getContentType();
-        return uri.contains("/upload") || uri.contains("/download") ||
-                (contentType != null && contentType.contains(MediaType.MULTIPART_FORM_DATA_VALUE)) ||
-                (contentType != null && contentType.equals(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+
+        if ((contentType != null && contentType.contains(MediaType.MULTIPART_FORM_DATA_VALUE)) ||
+                (contentType != null && contentType.equals(MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+            return true;
+        }
+
+        // 为了排除一些静态资源请求、swagger等非业务请求
+        for (String pattern : props.getExcludePaths()) {
+            if (pathMatcher.match(pattern, uri)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Data
     public static class LogEntry {
+        @JsonProperty("@timestamp")
         private String timestamp;
         private String traceId;
         private String method;
@@ -179,7 +197,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     public static class LoggingProperties {
         private boolean enableResponseBody = false;
         private int maxResponseLength = 2000;
-
+        private List<String> excludePaths = new ArrayList<>();
         public boolean isEnableResponseBody() {
             return enableResponseBody;
         }
@@ -195,5 +213,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         public void setMaxResponseLength(int maxResponseLength) {
             this.maxResponseLength = maxResponseLength;
         }
+
+        public List<String> getExcludePaths() { return excludePaths; }
+        public void setExcludePaths(List<String> excludePaths) { this.excludePaths = excludePaths; }
     }
 }

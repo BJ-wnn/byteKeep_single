@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>幂等性测试</title>
+    <!-- 引入 md5 依赖 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+</head>
+<body>
+<h2>订单提交测试</h2>
+<button onclick="submitOrder()">提交订单</button>
+
+<p id="result"></p>
+
+<script>
+
+    async function getIdempotentToken(requestPath, requestParams) {
+        const paramStr = JSON.stringify(requestParams);
+        const uniqueKey = requestPath + ':' + paramStr;
+        const hashKey = md5(uniqueKey);
+
+        const res = await fetch('/api/idempotent-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hashKey })  // 传给后端
+        });
+
+        if (!res.ok) {
+            throw new Error('获取幂等 token 失败');
+        }
+
+        const json = await res.json();  // ❗ 使用 json() 解析响应
+        return json.data;               // ✅ 提取 data 字段作为 token
+    }
+
+    async function submitOrder() {
+        const requestPath = '/demo/cache/idempotent';
+        const requestParams = {
+            orderId: 123
+        };  // 可根据实际需求填写参数
+
+        try {
+            const token = await getIdempotentToken(requestPath, requestParams);
+
+            const response = await fetch(requestPath, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Idempotency-Key': token
+                },
+                body: JSON.stringify(requestParams)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw err;
+            }
+
+            const data = await response.text(); // 或 .json()
+            document.getElementById('result').innerText = '✅ 成功: ' + data;
+
+        } catch (err) {
+            document.getElementById('result').innerText = '❌ 错误: ' + (err.message || JSON.stringify(err));
+        }
+    }
+</script>
+</body>
+</html>

@@ -27,7 +27,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
-        <File>${log.path}/${log.service.name}-${log.env}.log</File>
+        <File>${log.path}/${log.service.name}.log</File>
         <!-- rollingPolicy:当发生滚动时，决定 RollingFileAppender 的行为，涉及文件移动和重命名。 -->
         <!-- TimeBasedRollingPolicy： 最常用的滚动策略，它根据时间来制定滚动策略，既负责滚动也负责出发滚动 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -52,8 +52,7 @@
     </appender>
 
     <appender name="reqLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${log.path}/${log.req.name}-${log.env}.log</File>
-        <!--滚动策略，按照时间滚动 TimeBasedRollingPolicy-->
+        <File>${log.path}/${log.req.name}.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!--文件路径,定义了日志的切分方式——把每一天的日志归档到一个文件中,以防止日志填满整个磁盘空间-->
             <FileNamePattern>${log.path}/arch/req/req.%d{yyyy-MM-dd}.%i.log.gz</FileNamePattern>

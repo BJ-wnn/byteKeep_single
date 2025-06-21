@@ -28,10 +28,12 @@ public class Db2Config {
     }
 
     @Bean(name = "db2SqlSessionFactory")
-    public SqlSessionFactory sqlSessionFactory(@Qualifier("db2DataSource") DataSource dataSource) throws Exception {
+    public SqlSessionFactory sqlSessionFactory(@Qualifier("db2DataSource") DataSource dataSource,
+                                               @Qualifier("globalMyBatisInterceptors") Interceptor[] interceptors) throws Exception {
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
         factoryBean.setDataSource(dataSource);
         factoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath*:mappers/**/*.xml"));
+        factoryBean.setPlugins(interceptors);
         return factoryBean.getObject();
     }
 

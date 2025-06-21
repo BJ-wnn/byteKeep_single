@@ -73,6 +73,18 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!-- 接口重试 / 熔断、降级-->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot2</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>5.3</version> <!-- 兼容 logback <1.2.0 -->
+        </dependency>
 
 
         <dependency>
@@ -116,7 +128,65 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <!-- 本地开发 -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>dev</env>
+                <config.env.dir>src/main/resources/resources-env/dev</config.env.dir>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <!-- 测试 -->
+        <profile>
+            <id>test</id>
+            <properties>
+                <env>test</env>
+                <config.env.dir>src/main/resources/resources-env/test</config.env.dir>
+            </properties>
+        </profile>
+        <!-- 预发 -->
+        <profile>
+            <id>pre</id>
+            <properties>
+                <env>pre</env>
+                <config.env.dir>src/main/resources/resources-env/pre</config.env.dir>
+            </properties>
+        </profile>
+        <!-- 生产 -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <env>prod</env>
+                <config.env.dir>src/main/resources/resources-env/prod</config.env.dir>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <excludes>
+                    <exclude>resources-env/**</exclude>
+                </excludes>
+            </resource>
+            <!-- 仅包含当前激活环境的配置文件 -->
+            <resource>
+                <directory>${config.env.dir}</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -128,22 +198,53 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>org.wnn.bytekeep.ByteKeepSingleApplication</mainClass>
-                    <skip>true</skip>
+                    <skip>false</skip>
+                    <includes>
+                        <!-- 仅包含项目代码，排除依赖 -->
+                        <include>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                        </include>
+                    </includes>
                 </configuration>
+            </plugin>
+
+            <!-- 复制依赖到 libs 目录 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
                 <executions>
                     <execution>
-                        <id>repackage</id>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>repackage</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+
+            <!-- Surefire 插件配置，用于控制测试执行 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M7</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -51,6 +51,7 @@
         </encoder>
     </appender>
 
+    <!-- reqLog:记录请求日志 -->
     <appender name="reqLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${log.path}/${log.req.name}.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -68,14 +69,38 @@
         </encoder>
     </appender>
 
+
+    <!--  慢sql -->
+    <appender name="slowSqlLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${log.path}/${log.slowSql.name}-${log.env}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <FileNamePattern>${log.path}/arch/sql/slowSql.%d{yyyy-MM-dd}.%i.log.gz</FileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- 使用LogstashEncoder -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+<!--            <customFields>{"service_name":"your_service_name"}</customFields>-->
+            <includeMdc>true</includeMdc>
+        </encoder>
+    </appender>
+
     <appender name="ASYNC_LOG" class="ch.qos.logback.classic.AsyncAppender">
         <!-- 将 RollingFileAppender 作为异步日志的处理器 -->
         <appender-ref ref="reqLog"/>
+        <appender-ref ref="slowSqlLog"/>
     </appender>
 
     <!-- 针对reqLog的专门配置 -->
     <logger name="reqLog" level="INFO" additivity="false">
         <appender-ref ref="reqLog" />
+    </logger>
+
+    <!-- 慢sql -->
+    <logger name="slowSqlLog" additivity="false" level="INFO">
+        <appender-ref ref="slowSqlLog" />
     </logger>
 
     <!-- 定义根日志级别为 INFO -->

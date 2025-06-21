@@ -13,7 +13,7 @@ public enum ResultCode implements IResultCode{
     BAD_REQUEST(400, "Bad Request"),
     IDEMPOTENT_REJECTED(409,"重复提交"),
     MISSING_IDEMPOTENT_TOKEN(460, "缺少幂等性 Token"),
-    IDEMPOTENT_TOKEN(461,"非法token"),
+    ILLEGAL_IDEMPOTENT_TOKEN(461,"非法token"),
 
     // 业务错误 1000+
     USER_NOT_EXIST(1001, "User Not Found"),

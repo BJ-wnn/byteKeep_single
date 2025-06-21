@@ -1,5 +1,6 @@
 package org.wnn.bytekeep.config.dal;
 
+import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -24,7 +25,6 @@ import javax.sql.DataSource;
 @MapperScan(basePackages = {"org.wnn.bytekeep.demo.dao.db1"},sqlSessionTemplateRef = "db1SqlSessionTemplate")
 public class Db1Config {
 
-
     @Primary
     @Bean(name = "db1DataSource")
     @ConfigurationProperties(prefix = "spring.jta.atomikos.datasource.db1")
@@ -34,10 +34,12 @@ public class Db1Config {
 
     @Primary
     @Bean(name = "db1SqlSessionFactory")
-    public SqlSessionFactory sqlSessionFactory(@Qualifier("db1DataSource") DataSource dataSource) throws Exception {
+    public SqlSessionFactory sqlSessionFactory(@Qualifier("db1DataSource") DataSource dataSource,
+                                               @Qualifier("globalMyBatisInterceptors") Interceptor[] interceptors) throws Exception {
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
         factoryBean.setDataSource(dataSource);
         factoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath*:mappers/**/*.xml"));
+        factoryBean.setPlugins(interceptors);
         return factoryBean.getObject();
     }
 

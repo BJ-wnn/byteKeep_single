@@ -6,9 +6,9 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * @author NanNan Wang
  */
-public class MissingTokenException extends ResponseStatusException {
+public class MissingIdempotentTokenException extends ResponseStatusException {
 
-    public MissingTokenException(HttpStatus status, String reason) {
+    public MissingIdempotentTokenException(HttpStatus status, String reason) {
         super(status, reason);
     }
 }

@@ -1,0 +1,25 @@
+# 重试
+resilience4j:
+  retry:
+    instances:
+      default:  # 默认的重试配置实例，名称为 "default"
+        max-attempts: 5  # 最大重试次数（包括首次调用），例如设为 5 表示最多尝试 5 次
+        wait-duration: 100ms  # 每次重试之间的等待时间
+        retry-exceptions: # 指定哪些异常会触发重试机制
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.HttpServerErrorException
+          - java.lang.RuntimeException
+
+
+
+# 熔断设置
+resilience4j.circuitbreaker:
+    instances:
+      default: # 默认的熔断器配置实例，名称为 "default"
+        registerHealthIndicator: true  # 是否注册健康检查指标（用于监控）
+        slidingWindowSize: 10 # 滑动窗口大小：统计最近多少次调用来判断是否打开熔断器
+        minimumNumberOfCalls: 5 # 触发熔断前所需的最小调用次数（防止初始少量失败就熔断）
+        failureRateThreshold: 80 # 故障率阈值（百分比），超过这个比例失败后会打开熔断器
+        waitDurationInOpenState: 10s # 熔断开启状态持续时间，在此期间请求将被拒绝或降级
+        permittedNumberOfCallsInHalfOpenState: 2  # 半开状态下允许通过的最大请求数量（用于试探后端是否恢复）
+        automaticTransitionFromOpenToHalfOpenEnabled: true # 是否自动从 Open 状态切换到 Half-Open 状态（默认是 true）

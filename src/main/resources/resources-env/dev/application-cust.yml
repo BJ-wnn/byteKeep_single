@@ -1,7 +1,13 @@
 ## author : wang nannan
 ## 注意： 这里放到的都是自定义封装的配置
 
-# 接口日志是否记录返回结果
+###################### 慢sql插件配置 ######################
+slow:
+  sql:
+    service-name: ${spring.application.name}
+    threshold: 0 #慢sql的阀值 单位 ms
+
+###################### 接口请求日志管理 ######################
 logging:
   request:
     enableResponseBody: false # 是否记录返回体，生产禁止设置为true
@@ -20,6 +26,11 @@ logging:
       - /**/*.png
       - /**/*.jpg
 
+###################### swagger配置 ######################
+
+swagger:
+  base-packages:
+    - org.wnn.bytekeep.demo
 
 ###################### caffeine 缓存配置 ######################
 

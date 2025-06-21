@@ -5,17 +5,16 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 import org.wnn.bytekeep.core.exception.IdempotentException;
-import org.wnn.bytekeep.core.exception.MissingTokenException;
+import org.wnn.bytekeep.core.exception.MissingIdempotentTokenException;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
+ * 接口幂等切面，拦截有 @Idempotent 注解的方法
+ * 只有应用实现 IdempotentTokenService 接口才会生效。
  * @author NanNan Wang
  */
 @Aspect
@@ -33,7 +32,7 @@ public class IdempotentAspect {
         String token = request.getHeader(headerName);
 
         if (token == null || token.trim().isEmpty()) {
-            throw new MissingTokenException(HttpStatus.BAD_REQUEST, "缺少幂等性Token");
+            throw new MissingIdempotentTokenException(HttpStatus.BAD_REQUEST, "缺少幂等性Token");
         }
 
         if (!idempotentTokenService.tryUseToken(token)) {
@@ -42,6 +41,5 @@ public class IdempotentAspect {
 
         return joinPoint.proceed();
     }
-
 
 }

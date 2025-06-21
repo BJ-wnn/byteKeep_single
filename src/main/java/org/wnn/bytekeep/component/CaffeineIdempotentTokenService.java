@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.wnn.bytekeep.constant.CacheKeysPrefix;
+import org.wnn.bytekeep.core.exception.IllegalIdempotentTokenException;
 import org.wnn.bytekeep.core.idempotent.IdempotentTokenService;
 
 import static org.wnn.bytekeep.constant.CacheNames.TOKEN;
@@ -42,7 +43,7 @@ public class CaffeineIdempotentTokenService implements IdempotentTokenService {
 
         String current = cacheHelper.get(TOKEN, cacheKey);
         if (current == null) {
-            throw new IllegalArgumentException("Token 不存在或已过期");
+            throw new IllegalIdempotentTokenException(HttpStatus.BAD_REQUEST,"Token 不存在或已过期");
         }
 
         // 原子地将 "UNUSED" 替换为 "USED"
